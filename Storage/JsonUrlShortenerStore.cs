@@ -478,20 +478,43 @@ internal sealed class JsonUrlShortenerStore : IUrlShortenerStore, IDisposable
             FileShare.Read,
             bufferSize: 4096,
             FileOptions.Asynchronous | FileOptions.WriteThrough);
+        var appendStart = 0L;
         if (fileMode == FileMode.Append)
         {
             stream.Seek(0, SeekOrigin.End);
+            appendStart = stream.Position;
         }
 
-        foreach (var entry in entries)
+        try
         {
-            var json = JsonSerializer.SerializeToUtf8Bytes(entry, JsonOptions);
-            await stream.WriteAsync(json, cancellationToken);
-            await stream.WriteAsync("\n"u8.ToArray(), cancellationToken);
-        }
+            foreach (var entry in entries)
+            {
+                var json = JsonSerializer.SerializeToUtf8Bytes(entry, JsonOptions);
+                await stream.WriteAsync(json, cancellationToken);
+                await stream.WriteAsync("\n"u8.ToArray(), cancellationToken);
+            }
 
-        await stream.FlushAsync(cancellationToken);
-        stream.Flush(flushToDisk: true);
+            await stream.FlushAsync(cancellationToken);
+            stream.Flush(flushToDisk: true);
+        }
+        catch (Exception writeException) when (fileMode == FileMode.Append)
+        {
+            try
+            {
+                stream.SetLength(appendStart);
+                stream.Flush(flushToDisk: true);
+            }
+            catch (Exception rollbackException)
+            {
+                throw new AggregateException(
+                    "Journal append failed and the partial batch could not be rolled back. "
+                    + "Stop the service and reconcile the journal before restarting.",
+                    writeException,
+                    rollbackException);
+            }
+
+            throw;
+        }
     }
 
     private static void RepairIncompleteJournalTail(string path)

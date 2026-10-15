@@ -16,7 +16,17 @@ jobs:
       - run: dotnet format ProgramCSDemo.sln --verify-no-changes --no-restore
       - run: dotnet build ProgramCSDemo.sln --configuration Release --no-restore
       - name: Dependency vulnerability scan
-        run: dotnet list Tests/ProgramCSDemo.Tests.csproj package --vulnerable --include-transitive
+        shell: bash
+        run: |
+          if ! output="$(dotnet list Tests/ProgramCSDemo.Tests.csproj package --vulnerable --include-transitive 2>&1)"; then
+            printf '%s\n' "$output"
+            exit 1
+          fi
+          printf '%s\n' "$output"
+          if printf '%s\n' "$output" | grep -Eiq 'has the following vulnerable packages|^[[:space:]]*>[[:space:]].*[[:space:]](Critical|High|Moderate|Low)[[:space:]]'; then
+            echo "Vulnerable NuGet package(s) detected."
+            exit 1
+          fi
       - name: Unit, storage, integration, and coverage tests
         run: dotnet test Tests/ProgramCSDemo.Tests.csproj --configuration Release --collect:"XPlat Code Coverage"
       - name: Performance smoke tests

@@ -23,7 +23,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AnonymousTypeOfstringAndstring"
+                  "$ref": "#/components/schemas/ServiceStatusResponse"
                 }
               }
             }
@@ -44,7 +44,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AnonymousTypeOfstring"
+                  "$ref": "#/components/schemas/HealthResponse"
                 }
               }
             }
@@ -189,6 +189,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         }
       }
@@ -231,35 +241,6 @@
   },
   "components": {
     "schemas": {
-      "AnonymousTypeOfstring": {
-        "required": [
-          "status"
-        ],
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "string",
-            "nullable": true
-          }
-        }
-      },
-      "AnonymousTypeOfstringAndstring": {
-        "required": [
-          "service",
-          "status"
-        ],
-        "type": "object",
-        "properties": {
-          "service": {
-            "type": "string",
-            "nullable": true
-          },
-          "status": {
-            "type": "string",
-            "nullable": true
-          }
-        }
-      },
       "CreateShortLinkRequest": {
         "required": [
           "originalUrl"
@@ -350,6 +331,21 @@
           "instance": {
             "type": "string",
             "nullable": true
+          }
+        }
+      },
+      "ServiceStatusResponse": {
+        "required": [
+          "service",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "service": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
           }
         }
       },

@@ -98,6 +98,7 @@ internal static class UrlShortenerEndpoints
             .Produces(StatusCodes.Status302Found)
             .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status410Gone)
+            .ProducesProblem(StatusCodes.Status429TooManyRequests)
             .RequireRateLimiting("short-link-redirect");
 
         app.MapGet("/api/links/{code}/analytics", async Task<Results<

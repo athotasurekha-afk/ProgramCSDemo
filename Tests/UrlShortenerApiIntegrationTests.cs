@@ -103,7 +103,18 @@ public sealed class UrlShortenerApiIntegrationTests
         Assert.Equal(HttpStatusCode.OK, health.StatusCode);
         Assert.Equal(HttpStatusCode.OK, readiness.StatusCode);
         Assert.Equal(HttpStatusCode.OK, openApi.StatusCode);
-        Assert.Contains("/api/links", await openApi.Content.ReadAsStringAsync());
+        using var document = System.Text.Json.JsonDocument.Parse(await openApi.Content.ReadAsStringAsync());
+        var root = document.RootElement;
+        Assert.True(root.GetProperty("paths").TryGetProperty("/api/links", out _));
+        Assert.True(root.GetProperty("paths").TryGetProperty("/{code}", out var redirectPath));
+        Assert.True(redirectPath.GetProperty("get").GetProperty("responses").TryGetProperty("429", out _));
+        Assert.True(root.GetProperty("components").GetProperty("schemas")
+            .TryGetProperty(nameof(ServiceStatusResponse), out _));
+        Assert.True(root.GetProperty("components").GetProperty("schemas")
+            .TryGetProperty(nameof(HealthResponse), out _));
+        Assert.DoesNotContain(
+            root.GetProperty("components").GetProperty("schemas").EnumerateObject(),
+            schema => schema.Name.StartsWith("AnonymousType", StringComparison.Ordinal));
     }
 
     [Fact]

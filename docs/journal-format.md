@@ -26,7 +26,7 @@ The reader also accepts the original prototype's `kind: "click"` record containi
 
 Startup migrates an old JSON-array snapshot to a same-directory temporary JSONL file, keeps an adjacent timestamped `.legacy.bak`, then atomically replaces the old file. For JSONL data, startup truncates an incomplete final line before replay. Before every subsequent append, the writer also checks and removes an unterminated tail. A later valid append can therefore never be concatenated to a failed partial record.
 
-Complete malformed records are not silently skipped: startup fails with a data error so operators can restore a backup or investigate corruption. Appends are serialized in-process and flushed to disk; this is not a substitute for database transactions, multi-process locking, journal compaction, or tested backup/restore operations.
+Complete malformed records are not silently skipped: startup fails with a data error so operators can restore a backup or investigate corruption. Each append batch records its starting file length and truncates back to that point if writing or flushing fails, so analytics deltas are safely re-queued without duplicating complete records already written by the failed batch. If the rollback truncation itself fails, the error is surfaced as a fatal journal-reconciliation condition; stop the service and reconcile the file from a backup before restarting. Appends are serialized in-process and flushed to disk; this is not a substitute for database transactions, multi-process locking, journal compaction, or tested backup/restore operations.
 
 The store export command emits the legacy JSON-array shape for an offline rollback:
 

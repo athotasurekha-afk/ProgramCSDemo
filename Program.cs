@@ -89,11 +89,11 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.MapGet("/", () => TypedResults.Ok(new { service = "URL Shortener", status = "running" }))
+app.MapGet("/", () => TypedResults.Ok(new ServiceStatusResponse("URL Shortener", "running")))
     .WithName("GetServiceStatus")
     .WithSummary("Get service status");
 
-app.MapGet("/health", () => TypedResults.Ok(new { status = "healthy" }))
+app.MapGet("/health", () => TypedResults.Ok(new HealthResponse("healthy")))
     .WithName("GetHealth")
     .WithSummary("Check process liveness");
 

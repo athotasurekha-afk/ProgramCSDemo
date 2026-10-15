@@ -34,3 +34,6 @@ public sealed record LinkAnalyticsResponse(
 
 /// <summary>A basic liveness or storage-readiness status.</summary>
 public sealed record HealthResponse(string Status);
+
+/// <summary>Basic service identity and operational status.</summary>
+public sealed record ServiceStatusResponse(string Service, string Status);
