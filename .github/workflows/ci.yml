@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-test-container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - run: dotnet restore ProgramCSDemo.sln
+      - run: dotnet format ProgramCSDemo.sln --verify-no-changes --no-restore
+      - run: dotnet build ProgramCSDemo.sln --configuration Release --no-restore
+      - name: Dependency vulnerability scan
+        run: dotnet list Tests/ProgramCSDemo.Tests.csproj package --vulnerable --include-transitive
+      - name: Unit, storage, integration, and coverage tests
+        run: dotnet test Tests/ProgramCSDemo.Tests.csproj --configuration Release --collect:"XPlat Code Coverage"
+      - name: Performance smoke tests
+        run: dotnet test Tests/ProgramCSDemo.Tests.csproj --configuration Release --no-build --filter "Category=Performance"
+      - run: docker build --tag url-shortener .

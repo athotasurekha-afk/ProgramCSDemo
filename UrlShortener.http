@@ -1,0 +1,80 @@
+@baseUrl = http://localhost:5232
+
+### Create a link with a custom code
+POST {{baseUrl}}/api/links
+Content-Type: application/json
+Idempotency-Key: aspnet-guide-create-1
+
+{
+  "originalUrl": "https://learn.microsoft.com/aspnet/core/",
+  "customCode": "aspnet-guide"
+}
+
+### Create a link with a generated code and expiration
+POST {{baseUrl}}/api/links
+Content-Type: application/json
+Idempotency-Key: dotnet-guide-create-1
+
+{
+  "originalUrl": "https://learn.microsoft.com/dotnet/",
+  "expiresAt": "2027-01-01T00:00:00Z"
+}
+
+### Redirect (replace the code with a code returned by create)
+GET {{baseUrl}}/aspnet-guide
+
+### Read click analytics
+GET {{baseUrl}}/api/links/aspnet-guide/analytics
+
+### Invalid scheme (expected 400 Problem Details)
+POST {{baseUrl}}/api/links
+Content-Type: application/json
+
+{
+  "originalUrl": "javascript:alert(1)"
+}
+
+### Explicit null is rejected (expected 400 Problem Details)
+POST {{baseUrl}}/api/links
+Content-Type: application/json
+
+{
+  "originalUrl": null
+}
+
+### Private metadata address is rejected (expected 400 Problem Details)
+POST {{baseUrl}}/api/links
+Content-Type: application/json
+
+{
+  "originalUrl": "http://169.254.169.254/latest/meta-data/"
+}
+
+### Credentials in URL are rejected (expected 400 Problem Details)
+POST {{baseUrl}}/api/links
+Content-Type: application/json
+
+{
+  "originalUrl": "https://user:password@example.com/"
+}
+
+### Reserved route code is rejected (expected 400 Problem Details)
+POST {{baseUrl}}/api/links
+Content-Type: application/json
+
+{
+  "originalUrl": "https://example.com/",
+  "customCode": "health"
+}
+
+### Unknown code (expected 404)
+GET {{baseUrl}}/does-not-exist
+
+### Unknown analytics code (expected 404)
+GET {{baseUrl}}/api/links/does-not-exist/analytics
+
+### Liveness (process only)
+GET {{baseUrl}}/health
+
+### Readiness (checks store write access)
+GET {{baseUrl}}/ready
